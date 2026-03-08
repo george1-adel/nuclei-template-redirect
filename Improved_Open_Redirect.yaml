@@ -1,0 +1,55 @@
+id: open-redirect-generic
+
+info:
+  name: Open Redirect - Detection
+  author: afaq,melbadry9,Elmahdi,pxmme1337,Regala_,andirrahmani1,geeknik,AI
+  severity: medium
+  description: An open redirect vulnerability was detected.
+  classification:
+    cvss-metrics: CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N
+    cvss-score: 6.1
+    cwe-id: CWE-601
+  tags: redirect,generic,vuln
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+      - "{{BaseURL}}/{{redirect}}"
+
+    fuzzing:
+      - part: query
+        mode: multiple
+        type: replace
+        fuzz:
+          - "{{redirect}}"
+
+    redirects: false
+    payloads:
+      redirect: redirect.txt
+
+    stop-at-first-match: true
+
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 301
+          - 303
+          - 304
+          - 302
+          - 307
+          - 308
+        condition: or
+
+      - type: regex
+        part: header
+        regex:
+          - '(?im)^\s*location\s*:\s*(?:https?://|//)(?:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?\.)*(?:oast\.me|google\.com|example\.com|whitelisteddomain\.tld|attacker\.com|evil\.com)(?::\d+)?(?:[/?#].*)?$'
+
+    extractors:
+      - type: regex
+        part: header
+        name: location_value
+        regex:
+          - '(?im)^location\s*:\s*(https?://|//)?([^\r\n]+)'

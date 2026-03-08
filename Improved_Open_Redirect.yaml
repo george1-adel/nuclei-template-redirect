@@ -35,7 +35,6 @@ http:
       - type: status
         status:
           - 301
-          - 303
           - 304
           - 302
           - 307

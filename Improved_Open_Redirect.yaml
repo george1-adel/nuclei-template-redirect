@@ -2,7 +2,7 @@ id: open-redirect-generic
 
 info:
   name: Open Redirect - Detection
-  author: afaq,melbadry9,Elmahdi,pxmme1337,Regala_,andirrahmani1,geeknik
+  author: afaq,melbadry9,Elmahdi,pxmme1337,Regala_,andirrahmani1,geeknik,AI
   severity: medium
   description: An open redirect vulnerability was detected.
   classification:
@@ -30,18 +30,28 @@ http:
         status:
           - 300
           - 301
-          - 303
           - 302
+          - 303
           - 307
           - 308
         condition: or
 
+      # STRICT: Location header must redirect DIRECTLY to our target domain.
+      # Prevents false positives from internal redirects that echo payloads in query params.
       - type: regex
         part: header
         condition: or
         regex:
-          - '(?im)^\s*location\s*:\s*(?:https?://|//)(?:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?\.)*(?:oast\.me|google\.com|example\.com|whitelisteddomain\.tld|attacker\.com|evil\.com)(?::\d+)?(?:[/?#].*)?$'
-          - '(?im)^\s*location\s*:.*?(?:j.*a.*v.*a.*s.*c.*r.*i.*p.*t|alert\(.*?\)|confirm\(.*?\)|prompt\(.*?\))'
+          # Rule 1: Location host is DIRECTLY one of our domains
+          # Rejects: https://victim.com/page/https://evil.com (evil.com is in path)
+          # Accepts: https://evil.com, https://evil.com/path, //evil.com
+          - '(?im)^\s*location\s*:\s*(?:https?:)?//(?:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?\.)*(?:oast\.me|oastify\.com|google\.com|example\.com|attacker\.com|evil\.com)(?:$|[:/?\s#\r\n])'
+          # Rule 2: Location IS literally a javascript: URI
+          - '(?im)^\s*location\s*:\s*javascript\s*:.*?(?:alert\(|confirm\(|prompt\(|void\()'
+          # Rule 3: Location to our domain AND that destination has javascript: in a param
+          # Accepts: https://evil.com/?cb=javascript:alert(1)
+          # Rejects: https://victim.com/gif/https://evil.com/?url=javascript:alert
+          - '(?im)^\s*location\s*:\s*(?:https?:)?//(?:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?\.)*(?:oast\.me|oastify\.com|google\.com|example\.com|attacker\.com|evil\.com)(?:$|[:/?\s#][^\r\n]*)[?&][^=]+=javascript\s*:.*?(?:alert\(|confirm\(|prompt\(|void\()'
 
     extractors:
       - type: regex

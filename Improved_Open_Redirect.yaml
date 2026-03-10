@@ -16,13 +16,7 @@ http:
     path:
       - "{{BaseURL}}"
       - "{{BaseURL}}/{{redirect}}"
-
-    fuzzing:
-      - part: query
-        mode: multiple
-        type: replace
-        fuzz:
-          - "{{redirect}}"
+      - "{{BaseURL}}/?redirect={{redirect}}"
 
     redirects: false
     payloads:
@@ -34,8 +28,9 @@ http:
     matchers:
       - type: status
         status:
+          - 300
           - 301
-          - 304
+          - 303
           - 302
           - 307
           - 308
@@ -43,8 +38,10 @@ http:
 
       - type: regex
         part: header
+        condition: or
         regex:
           - '(?im)^\s*location\s*:\s*(?:https?://|//)(?:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?\.)*(?:oast\.me|google\.com|example\.com|whitelisteddomain\.tld|attacker\.com|evil\.com)(?::\d+)?(?:[/?#].*)?$'
+          - '(?im)^\s*location\s*:.*?(?:j.*a.*v.*a.*s.*c.*r.*i.*p.*t|alert\(.*?\)|confirm\(.*?\)|prompt\(.*?\))'
 
     extractors:
       - type: regex

@@ -2,7 +2,7 @@ id: open-redirect-generic
 
 info:
   name: Open Redirect - Detection
-  author: afaq,melbadry9,Elmahdi,pxmme1337,Regala_,andirrahmani1,geeknik,AI
+  author: afaq,melbadry9,Elmahdi,pxmme1337,Regala_,andirrahmani1,geeknik
   severity: medium
   description: An open redirect vulnerability was detected.
   classification:
